@@ -548,8 +548,8 @@ body {
 
 .css-envelope .l { background: var(--envelope-shade); clip-path: polygon(0 0, 50% 52%, 0 100%); }
 .css-envelope .r { background: var(--envelope-shade); clip-path: polygon(100% 0, 50% 52%, 100% 100%); }
-.css-envelope .b { background: var(--envelope-shade); clip-path: polygon(0 100%, 50% 45%, 100% 100%); }
-.css-envelope .t { background: var(--envelope); clip-path: polygon(0 0, 100% 0, 50% 58%); }
+.css-envelope .b { background: #242021; clip-path: polygon(0 100%, 50% 45%, 100% 100%); }
+.css-envelope .t { background: #322c2d; clip-path: polygon(0 0, 100% 0, 50% 58%); }
 .css-envelope .s {
   inset: auto;
   left: 50%;
