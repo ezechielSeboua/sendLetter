@@ -54,8 +54,13 @@ export function ComposePage() {
     }
   }, [userId, userEmail])
 
+  // select_account : Google propose toujours le choix du compte, sinon il reprend
+  // automatiquement le dernier utilisé et on ne peut pas en changer.
   const signIn = () =>
-    supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/` } })
+    supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/`, queryParams: { prompt: 'select_account' } },
+    })
 
   return (
     <>
