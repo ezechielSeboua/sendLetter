@@ -21,12 +21,13 @@ Le projet utilise le projet Supabase « slase-custom-3d », partagé avec Slase 
 Tout ce qui concerne les lettres vit dans le schéma privé `sendletter`
 (migration : `supabase/migrations/20261029120000_sendletter.sql`).
 
-Réglages modifiables depuis le tableau de bord (Table Editor, schéma `sendletter`) :
+Réglages modifiables par les administrateurs dans l'onglet « Réglages » du site
+(ou dans le tableau de bord Supabase, Table Editor, schéma `sendletter`) :
 
 | Table | Rôle |
 |---|---|
 | `settings` | `read_window` (durée de lecture, 5 min), `unopened_ttl` (durée de vie sans ouverture, 7 jours), `history_ttl` (conservation dans l'historique, 90 jours) |
-| `allowed_emails` | comptes Google autorisés et leur rôle ; gérés depuis l'onglet « Comptes » par les administrateurs |
+| `allowed_emails` | comptes Google autorisés et leur rôle ; gérés par les administrateurs |
 
 Toutes les 5 minutes, la tâche `pg_cron` `sendletter-purge` efface le contenu des lettres expirées
 (destinataire et titre restent pour l'historique), puis supprime celles qui dépassent `history_ttl`.

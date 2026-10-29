@@ -45,6 +45,22 @@ export const listMyLetters = () => call<LetterSummary[]>('list_my_letters')
 // Annule une lettre pas encore ouverte, ou la retire de l'historique.
 export const deleteMyLetter = (slug: string) => call<boolean>('delete_my_letter', { p_slug: slug })
 
+// Durées en secondes
+export interface Settings {
+  read_window: number
+  unopened_ttl: number
+  history_ttl: number
+}
+
+export const getSettings = () => call<Settings | null>('get_settings')
+
+export const updateSettings = (s: Settings) =>
+  call<null>('update_settings', {
+    p_read_window: s.read_window,
+    p_unopened_ttl: s.unopened_ttl,
+    p_history_ttl: s.history_ttl,
+  })
+
 export const listAllowedEmails = () => call<AllowedEmail[]>('list_allowed_emails')
 
 export const addAllowedEmail = (email: string, admin: boolean) =>

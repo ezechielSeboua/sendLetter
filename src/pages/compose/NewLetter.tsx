@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { ActionButton } from '../../components/Letter'
 import { LetterContent } from '../../components/LetterContent'
 import { ShareLinks } from '../../components/ShareLinks'
-import { createLetter, letterUrl, type LetterFields } from '../../lib/letters'
+import { formatDuration } from '../../lib/durations'
+import { createLetter, getSettings, letterUrl, type LetterFields, type Settings } from '../../lib/letters'
 import { burst } from '../../lib/particles'
 import { applyTheme, themeIds, themes, type FieldDef, type ThemeId } from '../../lib/themes'
 
@@ -18,10 +19,16 @@ export function NewLetter() {
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [slug, setSlug] = useState<string | null>(null)
+  const [settings, setSettings] = useState<Settings | null>(null)
   const actionRef = useRef<HTMLButtonElement>(null)
   const theme = themes[themeId]
 
   useEffect(() => applyTheme(theme), [theme])
+
+  // Relu à chaque lettre générée : les durées ont pu changer dans les réglages
+  useEffect(() => {
+    if (slug) getSettings().then(setSettings).catch(() => {})
+  }, [slug])
 
   // Le destinataire et la signature suivent ; titre et message par défaut changent avec le type.
   const pickTheme = (id: ThemeId) => {
@@ -68,8 +75,9 @@ export function NewLetter() {
           <h2 id="ready-title">Ta lettre est prête</h2>
           <ShareLinks url={letterUrl(slug)} />
           <p className="panel-warning">
-            N’ouvre pas ce lien toi-même : la lettre ne reste lisible que quelques minutes après sa
-            première ouverture. Sans ouverture, elle expire au bout d’une semaine.
+            N’ouvre pas ce lien toi-même : la lettre ne reste lisible que{' '}
+            {settings ? formatDuration(settings.read_window) : 'quelques minutes'} après sa première ouverture.
+            Sans ouverture, elle expire au bout de {settings ? formatDuration(settings.unopened_ttl) : 'quelques jours'}.
           </p>
           <button type="button" className="btn-seal" onClick={restart}>
             Écrire une autre lettre

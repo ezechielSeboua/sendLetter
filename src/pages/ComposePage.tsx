@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { senderInfo } from '../lib/letters'
 import { supabase } from '../lib/supabase'
 import { Accounts } from './compose/Accounts'
+import { Durations } from './compose/Durations'
 import { History } from './compose/History'
 import { NewLetter } from './compose/NewLetter'
 
@@ -92,14 +93,14 @@ export function ComposePage() {
   )
 }
 
-type Tab = 'new' | 'history' | 'accounts'
+type Tab = 'new' | 'history' | 'settings'
 
-const tabHash: Record<Tab, string> = { new: '', history: '#historique', accounts: '#comptes' }
+const tabHash: Record<Tab, string> = { new: '', history: '#historique', settings: '#reglages' }
 
 const tabFromHash = (): Tab =>
-  window.location.hash === tabHash.history ? 'history' : window.location.hash === tabHash.accounts ? 'accounts' : 'new'
+  window.location.hash === tabHash.history ? 'history' : window.location.hash === tabHash.settings ? 'settings' : 'new'
 
-// Onglets dans l'adresse (#historique, #comptes) : un rechargement garde l'onglet ouvert.
+// Onglets dans l'adresse (#historique, #reglages) : un rechargement garde l'onglet ouvert.
 function Dashboard({ email, isAdmin }: { email: string; isAdmin: boolean }) {
   const [tab, setTab] = useState<Tab>(tabFromHash)
 
@@ -112,9 +113,9 @@ function Dashboard({ email, isAdmin }: { email: string; isAdmin: boolean }) {
   const tabs: { id: Tab; label: string }[] = [
     { id: 'new', label: 'Nouvelle lettre' },
     { id: 'history', label: 'Historique' },
-    ...(isAdmin ? [{ id: 'accounts' as const, label: 'Comptes' }] : []),
+    ...(isAdmin ? [{ id: 'settings' as const, label: 'Réglages' }] : []),
   ]
-  const current = tab === 'accounts' && !isAdmin ? 'new' : tab
+  const current = tab === 'settings' && !isAdmin ? 'new' : tab
 
   const open = (id: Tab) => {
     history.replaceState(null, '', `${window.location.pathname}${tabHash[id]}`)
@@ -152,7 +153,12 @@ function Dashboard({ email, isAdmin }: { email: string; isAdmin: boolean }) {
         <NewLetter />
       </div>
       {current === 'history' && <History />}
-      {current === 'accounts' && <Accounts me={email} />}
+      {current === 'settings' && (
+        <div className="settings-stack">
+          <Durations />
+          <Accounts me={email} />
+        </div>
+      )}
     </div>
   )
 }

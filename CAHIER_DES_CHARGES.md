@@ -1,6 +1,6 @@
 # Cahier des charges : sendLetter
 
-> Version 1.1, 29 octobre 2026 (ajout de l'historique et de la gestion des comptes)
+> Version 1.2, 29 octobre 2026 (historique, gestion des comptes et des durées depuis l'interface)
 
 ## 1. Présentation
 
@@ -26,7 +26,7 @@ seule application, où chaque variante devient un **type de lettre**.
 
 | Acteur | Accès | Peut |
 |---|---|---|
-| **Administrateur** | Onglet « Comptes » ; tableau de bord Supabase pour les durées | Expéditeur qui gère aussi les comptes autorisés et leur rôle. |
+| **Administrateur** | Onglet « Réglages » | Expéditeur qui règle aussi les durées et gère les comptes autorisés et leur rôle. |
 | **Expéditeur** | `/`, connecté avec un compte Google autorisé | Choisir un type, remplir la lettre, voir l'aperçu, générer et partager le lien, suivre ses lettres. |
 | **Destinataire** | `/l/<identifiant>`, sans compte | Ouvrir l'enveloppe, lire, déclencher l'effet visuel, refermer. |
 | **Visiteur non autorisé** | `/` | Se connecter avec Google, puis se voir refuser l'accès. |
@@ -48,13 +48,13 @@ seule application, où chaque variante devient un **type de lettre**.
 
 ### 4.1 bis Historique et comptes
 
-L'espace connecté comporte trois onglets, gardés dans l'adresse (`#historique`, `#comptes`) :
+L'espace connecté comporte trois onglets, gardés dans l'adresse (`#historique`, `#reglages`) :
 
 | Onglet | Visible par | Contenu |
 |---|---|---|
 | Nouvelle lettre | Tous les expéditeurs | Formulaire et aperçu ; le brouillon est conservé en changeant d'onglet. |
 | Historique | Tous les expéditeurs | Ses propres lettres, de la plus récente à la plus ancienne. |
-| Comptes | Administrateurs | Liste des comptes autorisés, ajout, retrait, rôle administrateur. |
+| Réglages | Administrateurs | Durées d'expiration et de suppression ; comptes autorisés (ajout, retrait, rôle administrateur). |
 
 **Historique.** Chaque lettre affiche son type, son titre, son destinataire, son statut et ses dates,
 avec un décompte par statut en tête de liste.
@@ -65,7 +65,13 @@ avec un décompte par statut en tête de liste.
 | Ouverte | Lien ouvert au moins une fois | Date d'ouverture, puis « lisible jusqu'à … » ou « lien expiré » | Retirer de l'historique |
 | Expirée | Jamais ouverte, délai dépassé | Date de création, « jamais ouverte » | Retirer de l'historique |
 
-**Comptes.** Un administrateur ajoute une adresse (avec ou sans rôle administrateur), donne ou
+**Réglages : durées.** Un administrateur règle les trois durées de la section 6, chacune avec un
+nombre et une unité. Les bornes sont contrôlées dans l'interface et côté serveur ; la conservation
+dans l'historique doit être au moins égale à la validité du lien. Les nouvelles valeurs
+s'appliquent immédiatement, y compris aux lettres déjà envoyées. Le message affiché après la
+génération d'un lien reprend les durées en vigueur.
+
+**Réglages : comptes.** Un administrateur ajoute une adresse (avec ou sans rôle administrateur), donne ou
 retire ce rôle, ou retire un compte. Il ne peut ni se retirer, ni retirer son propre rôle, pour
 qu'il reste toujours un administrateur. Les lettres d'un compte retiré restent lisibles jusqu'à
 leur expiration.
@@ -118,10 +124,10 @@ message sont remplacés par ceux du nouveau type s'ils n'ont pas été personnal
 
 | Règle | Valeur par défaut | Modifiable |
 |---|---|---|
-| Durée de lecture après la 1re ouverture | 5 minutes | `sendletter.settings.read_window` |
-| Durée de vie d'un lien jamais ouvert | 7 jours | `sendletter.settings.unopened_ttl` |
+| Durée de lecture après la 1re ouverture | 5 minutes (de 1 minute à 24 heures) | Onglet « Réglages » |
+| Durée de vie d'un lien jamais ouvert | 7 jours (de 1 minute à 90 jours) | Onglet « Réglages » |
 | Fréquence du nettoyage des lettres expirées | Toutes les 5 minutes | Tâche `pg_cron` `sendletter-purge` |
-| Conservation de la trace d'une lettre dans l'historique | 90 jours après sa création | `sendletter.settings.history_ttl` |
+| Conservation de la trace d'une lettre dans l'historique | 90 jours après sa création (de 1 à 365 jours) | Onglet « Réglages » |
 | Taille maximale d'une lettre | 8 Ko | Contrainte de la table `letters` |
 
 - Le compte à rebours démarre à la **première ouverture du lien**, pas à la création ; il ne peut
@@ -143,7 +149,7 @@ message sont remplacés par ceux du nouveau type s'ils n'ont pas été personnal
 |---|---|
 | Création réservée | `create_letter` exige une session et vérifie l'adresse dans `allowed_emails`, côté serveur. |
 | Historique privé | `list_my_letters` et `delete_my_letter` ne portent que sur les lettres du compte connecté. |
-| Gestion des comptes réservée | Les fonctions de gestion des comptes vérifient le rôle administrateur côté serveur. |
+| Réglages réservés | Les fonctions de gestion des comptes et des durées vérifient le rôle administrateur côté serveur. |
 | Lecture sans compte | `open_letter` est la seule fonction accessible sans connexion. |
 | Données inaccessibles directement | Schéma `sendletter` non exposé par l'API, RLS activée sans règle d'accès. |
 | Isolation du projet partagé | Aucune modification des tables, règles ou fichiers de Slase Custom 3D. |
@@ -170,6 +176,7 @@ connecter, mais ne peut rien faire dans sendLetter.
 | `src/pages/ComposePage.tsx` | Connexion, contrôle des droits, onglets |
 | `src/pages/compose/NewLetter.tsx` | Formulaire, aperçu, lien généré |
 | `src/pages/compose/History.tsx` | Historique et statuts |
+| `src/pages/compose/Durations.tsx` | Réglage des durées |
 | `src/pages/compose/Accounts.tsx` | Gestion des comptes autorisés |
 | `src/pages/ReadPage.tsx` | Chargement de la lettre, écrans « plus disponible » et erreur |
 | `src/components/LetterExperience.tsx` | Enveloppe 3D, marteau, ouverture et fermeture |
@@ -196,8 +203,8 @@ Fonctions exposées :
 | Fonction | Accès |
 |---|---|
 | `open_letter(slug)` | Tout le monde |
-| `sender_info()`, `create_letter(theme, fields)`, `list_my_letters()`, `delete_my_letter(slug)` | Comptes autorisés |
-| `list_allowed_emails()`, `add_allowed_email(email, admin)`, `remove_allowed_email(email)` | Administrateurs |
+| `sender_info()`, `get_settings()`, `create_letter(theme, fields)`, `list_my_letters()`, `delete_my_letter(slug)` | Comptes autorisés |
+| `update_settings(read_window, unopened_ttl, history_ttl)` (en secondes), `list_allowed_emails()`, `add_allowed_email(email, admin)`, `remove_allowed_email(email)` | Administrateurs |
 
 `can_send()` reste en place pour la compatibilité ; l'interface utilise `sender_info()`.
 
@@ -218,7 +225,7 @@ Fonctions exposées :
 1. Variables d'environnement Vercel : `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`.
 2. Supabase, Authentication > URL Configuration > Redirect URLs : `http://localhost:5173/**` et
    `https://<domaine-vercel>/**`.
-3. Ajouter les expéditeurs depuis l'onglet « Comptes ».
+3. Ajouter les expéditeurs et ajuster les durées depuis l'onglet « Réglages ».
 
 ## 11. Critères d'acceptation
 
@@ -238,9 +245,11 @@ Fonctions exposées :
 - [ ] L'historique d'un expéditeur ne montre pas les lettres des autres.
 - [ ] Un administrateur ajoute et retire un compte, et donne ou retire le rôle administrateur.
 - [ ] Un compte ajouté peut se connecter ; un compte retiré est refusé.
-- [ ] L'onglet « Comptes » n'apparaît pas pour un expéditeur non administrateur.
+- [ ] L'onglet « Réglages » n'apparaît pas pour un expéditeur non administrateur.
+- [ ] Une durée modifiée dans « Réglages » s'applique sans redéployer, y compris aux lettres déjà envoyées.
+- [ ] Une durée hors bornes, ou une conservation plus courte que la validité du lien, est refusée.
 
-## 12. Hors périmètre (version 1.1)
+## 12. Hors périmètre (version 1.2)
 
 - Réponse du destinataire.
 - Lettre programmée ou envoyée par e-mail depuis le site.
