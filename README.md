@@ -25,10 +25,11 @@ Réglages modifiables depuis le tableau de bord (Table Editor, schéma `sendlett
 
 | Table | Rôle |
 |---|---|
-| `settings` | `read_window` (durée de lecture, 5 min) et `unopened_ttl` (durée de vie sans ouverture, 7 jours) |
-| `allowed_emails` | adresses Google autorisées à créer des lettres (en minuscules) |
+| `settings` | `read_window` (durée de lecture, 5 min), `unopened_ttl` (durée de vie sans ouverture, 7 jours), `history_ttl` (conservation dans l'historique, 90 jours) |
+| `allowed_emails` | comptes Google autorisés et leur rôle ; gérés depuis l'onglet « Comptes » par les administrateurs |
 
-Les lettres expirées sont supprimées toutes les 5 minutes par la tâche `pg_cron` `sendletter-purge`.
+Toutes les 5 minutes, la tâche `pg_cron` `sendletter-purge` efface le contenu des lettres expirées
+(destinataire et titre restent pour l'historique), puis supprime celles qui dépassent `history_ttl`.
 
 Dans Authentication > URL Configuration > Redirect URLs, ajouter :
 - `http://localhost:5173/**`
