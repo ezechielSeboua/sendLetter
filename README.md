@@ -1,75 +1,40 @@
-# React + TypeScript + Vite
+# sendLetter
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Lettres scellées éphémères : l'expéditeur prépare une lettre (Invitation, Anniversaire ou Crush),
+obtient un lien court, et le destinataire brise le sceau d'une enveloppe 3D pour la lire.
 
-Currently, two official plugins are available:
+- `/` : configuration de la lettre, réservée aux comptes Google autorisés.
+- `/l/<identifiant>` : lecture. Le lien n'est lisible que 5 minutes après sa première ouverture,
+  et expire au bout de 7 jours s'il n'est jamais ouvert.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Développement
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```sh
+cp .env.example .env.local   # puis renseigner l'URL et la clé publishable Supabase
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+## Supabase
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Le projet utilise le projet Supabase « slase-custom-3d », partagé avec Slase Custom 3D.
+Tout ce qui concerne les lettres vit dans le schéma privé `sendletter`
+(migration : `supabase/migrations/20261029120000_sendletter.sql`).
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Réglages modifiables depuis le tableau de bord (Table Editor, schéma `sendletter`) :
 
-```
+| Table | Rôle |
+|---|---|
+| `settings` | `read_window` (durée de lecture, 5 min) et `unopened_ttl` (durée de vie sans ouverture, 7 jours) |
+| `allowed_emails` | adresses Google autorisées à créer des lettres (en minuscules) |
+
+Les lettres expirées sont supprimées toutes les 5 minutes par la tâche `pg_cron` `sendletter-purge`.
+
+Dans Authentication > URL Configuration > Redirect URLs, ajouter :
+- `http://localhost:5173/**`
+- `https://<domaine-vercel>/**`
+
+## Déploiement (Vercel)
+
+Variables d'environnement : `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY`.
+`vercel.json` renvoie toutes les routes vers `index.html` pour que les liens `/l/…` fonctionnent.

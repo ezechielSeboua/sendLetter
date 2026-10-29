@@ -132,6 +132,7 @@ export function drawCard(card: HTMLElement, tokens: Tokens, target?: HTMLCanvasE
       ctx.restore()
     }
   }
+  drawText(card.querySelector('.letter-to'))
   drawText(card.querySelector('h2'))
   drawText(card.querySelector('.btn-love'))
   drawText(card.querySelector('.btn-close'), true)

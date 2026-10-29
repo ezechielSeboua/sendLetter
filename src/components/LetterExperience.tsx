@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Hammer, type HammerHandle, type Point } from './components/Hammer'
-import { Letter } from './components/Letter'
-import { hasWebGL, prefersReducedMotion, readTokens } from './lib/tokens'
-import type { EnvelopeScene } from './scene/EnvelopeScene'
-
-import { ShareSidebar } from './components/ShareSidebar'
+import type { LetterFields } from '../lib/letters'
+import type { Theme } from '../lib/themes'
+import { hasWebGL, prefersReducedMotion, readTokens } from '../lib/tokens'
+import type { EnvelopeScene } from '../scene/EnvelopeScene'
+import { Hammer, type HammerHandle, type Point } from './Hammer'
+import { Letter } from './Letter'
 
 type Phase = 'loading' | 'closed' | 'striking' | 'opening' | 'open' | 'closing'
 
-export default function App() {
+// Enveloppe, marteau, sceau puis lettre. La palette du thème doit être appliquée avant le montage.
+export function LetterExperience({ theme, fields }: { theme: Theme; fields: LetterFields }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sceneRef = useRef<EnvelopeScene | null>(null)
   const openBtnRef = useRef<HTMLButtonElement>(null)
@@ -20,42 +21,6 @@ export default function App() {
   const [hoverEnvelope, setHoverEnvelope] = useState(false)
   const hammerRef = useRef<HammerHandle>(null)
   const returnFocus = useRef(false)
-
-  const [shareUrl, setShareUrl] = useState(() => window.location.href)
-  
-  const defaultTitle = 'Strictement Confidentiel'
-  const defaultMsg = "Votre présence est requise pour un événement d'une importance capitale. Les enjeux sont grands et le silence est d'or. Prenez connaissance des directives et préparez-vous en conséquence. Nous comptons sur vous."
-  
-  const [title, setTitle] = useState(() => {
-    const params = new URLSearchParams(window.location.search)
-    const t = params.get('t')
-    if (t) {
-      try { return decodeURIComponent(escape(atob(t))) } catch (e) { return defaultTitle }
-    }
-    return defaultTitle
-  })
-  
-  const [message, setMessage] = useState(() => {
-    const params = new URLSearchParams(window.location.search)
-    const m = params.get('m')
-    if (m) {
-      try { return decodeURIComponent(escape(atob(m))) } catch (e) { return defaultMsg }
-    }
-    return defaultMsg
-  })
-
-  const updateLetter = useCallback((newTitle: string, newMsg: string) => {
-    setTitle(newTitle)
-    setMessage(newMsg)
-    const encodedT = btoa(unescape(encodeURIComponent(newTitle)))
-    const encodedM = btoa(unescape(encodeURIComponent(newMsg)))
-    const url = new URL(window.location.href)
-    url.searchParams.set('t', encodedT)
-    url.searchParams.set('m', encodedM)
-    window.history.pushState({}, '', url.toString())
-    setShareUrl(url.toString())
-  }, [])
-
 
   const announce = useCallback((msg: string) => {
     // Vider puis remplir pour que le même message soit relu
@@ -146,7 +111,7 @@ export default function App() {
     let cancelled = false
     let scene: EnvelopeScene | null = null
     const canvas = canvasRef.current
-    import('./scene/EnvelopeScene')
+    import('../scene/EnvelopeScene')
       .then(async ({ EnvelopeScene }) => {
         if (cancelled) return
         scene = new EnvelopeScene(canvas, readTokens(), prefersReducedMotion(), {
@@ -178,7 +143,6 @@ export default function App() {
 
   return (
     <>
-      <ShareSidebar shareUrl={shareUrl} />
       <div className="backdrop" aria-hidden="true" />
       {webgl ? (
         <canvas id="gl" ref={canvasRef} aria-hidden="true" />
@@ -201,8 +165,8 @@ export default function App() {
 
       <main className="stage" data-hidden={started} inert={started}>
         <h1>
-          Message De la plus haute importance <br />
-          <span>Pour sa majesté</span>
+          {theme.heading}
+          <span>{theme.headingSub}</span>
         </h1>
         <div className="stage-actions">
           <button
@@ -212,13 +176,13 @@ export default function App() {
             onClick={breakFromButton}
             disabled={phase === 'loading'}
           >
-            Touchez le sceau royal
+            {theme.sealButton}
           </button>
-          <p className="stage-hint">Pour ouvrir la lettre.</p>
+          <p className="stage-hint">{theme.sealHint}</p>
         </div>
       </main>
 
-      <Letter visible={letterVisible} ink={ink} dim={!webgl} onClose={closeLetter} announce={announce} title={title} message={message} onUpdateLetter={updateLetter} shareUrl={shareUrl} />
+      <Letter theme={theme} fields={fields} visible={letterVisible} ink={ink} dim={!webgl} onClose={closeLetter} announce={announce} />
 
       <Hammer ref={hammerRef} active={phase === 'closed' || phase === 'striking'} ready={hoverEnvelope} />
 

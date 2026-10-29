@@ -312,6 +312,74 @@ body {
   transform: none;
 }
 
+/* Destinataire : dessiné aussi sur la lettre 3D (textures.ts), donc visible avant l'écriture */
+.letter-to {
+  margin: 0 0 6px;
+  font-family: var(--font-hand);
+  font-size: 1.5rem;
+  color: var(--ink-soft);
+}
+
+.letter-age {
+  margin: -8px 0 14px;
+  font-family: var(--font-hand);
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--wax);
+}
+
+/* Détails et signature apparaissent avec l'encre, après le texte */
+.letter-age,
+.letter-details,
+.letter-signature {
+  transition: opacity 600ms var(--ease-out) 400ms;
+}
+
+.letter[data-ink='false'] :is(.letter-age, .letter-details, .letter-signature) {
+  opacity: 0;
+  transition-delay: 0ms;
+  transition-duration: 200ms;
+}
+
+.letter-details {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0 0;
+  padding: 14px 18px;
+  border-left: 2px solid var(--rose-ink);
+  background: color-mix(in srgb, var(--paper) 60%, white);
+}
+
+.letter-details div {
+  display: grid;
+  grid-template-columns: 4.5em 1fr;
+  gap: 8px;
+}
+
+.letter-details dt {
+  font-family: var(--font-hand);
+  font-size: 1.25rem;
+  line-height: 1.4;
+  color: var(--rose-ink);
+}
+
+.letter-details dd {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.letter-signature {
+  margin: 24px 0 0;
+  text-align: right;
+  font-family: var(--font-hand);
+  font-size: 1.8rem;
+  color: var(--ink);
+}
+
+.letter-signature::before {
+  content: '— ';
+}
+
 .letter-footer {
   display: flex;
   align-items: center;
@@ -545,27 +613,6 @@ body {
 }
 
 
-/* ---------- Share Sidebar ---------- */
-
-.share-sidebar {
-  position: fixed;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 60;
-  padding: 12px;
-  background: rgba(20, 11, 13, 0.45);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(239, 227, 211, 0.15);
-  border-radius: 40px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
 .share-btn {
   display: flex;
   align-items: center;
@@ -591,94 +638,289 @@ body {
   background: rgba(37, 211, 102, 0.2);
 }
 
-.share-btn.tiktok:hover {
-  color: #fff;
-  filter: drop-shadow(2px 2px 0px #ff0050) drop-shadow(-2px -2px 0px #00f2fe);
-}
-
 .share-btn.telegram:hover {
   color: #2AABEE;
   background: rgba(42, 171, 238, 0.2);
 }
 
-.share-toast {
-  position: absolute;
-  right: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-right: 16px;
-  background: var(--envelope);
-  color: var(--cream);
-  padding: 8px 14px;
-  border-radius: 6px;
+/* ---------- Écrans simples : lettre expirée, connexion ---------- */
+
+.notice {
+  position: relative;
+  z-index: 10;
+  min-height: 100%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.notice h1 {
+  margin: 0;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  line-height: 1.1;
+  font-variation-settings: 'opsz' 144;
+}
+
+.notice p {
+  margin: 0;
+  max-width: 34ch;
+  color: #b8a79c;
+  line-height: 1.6;
+}
+
+.notice-seal {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e0657a, var(--wax) 55%, #7d1b2d);
+  box-shadow: 0 0 0 6px rgba(194, 54, 79, 0.15);
+}
+
+/* ---------- Configuration de la lettre (expéditeur) ---------- */
+
+/* body est en overflow: hidden pour la scène 3D : la configuration défile dans son propre conteneur */
+.compose {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.composer {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.composer-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-bottom: 24px;
+}
+
+.composer-header h1 {
+  margin: 0;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+}
+
+.composer-account {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
   font-size: 0.9rem;
-  font-family: var(--font-serif);
-  white-space: nowrap;
+  color: #b8a79c;
+  overflow-wrap: anywhere;
+}
+
+.composer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.panel {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid rgba(239, 227, 211, 0.14);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(8px);
+}
+
+.panel h2 {
+  margin: 0;
+  font-weight: 400;
+  font-size: 1.4rem;
+}
+
+.panel .btn-seal {
+  justify-self: start;
+}
+
+.panel-warning {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 2px solid var(--wax);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.type-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.type-picker legend {
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #b8a79c;
+}
+
+.type-option input {
+  position: absolute;
+  opacity: 0;
   pointer-events: none;
-  border: 1px solid rgba(239, 227, 211, 0.15);
-  animation: fade-toast 2s forwards;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-@keyframes fade-toast {
-  0% { opacity: 0; transform: translateY(-50%) translateX(10px); }
-  15% { opacity: 1; transform: translateY(-50%) translateX(0); }
-  85% { opacity: 1; transform: translateY(-50%) translateX(0); }
-  100% { opacity: 0; transform: translateY(-50%) translateX(-10px); }
+.type-option span {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(239, 227, 211, 0.22);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color var(--dur-state) var(--ease-out), background var(--dur-state) var(--ease-out);
 }
 
-@media (max-width: 600px) {
-  .share-sidebar {
-    right: 12px;
-    padding: 8px;
-    gap: 8px;
-  }
-  .share-btn {
-    width: 38px;
-    height: 38px;
-  }
-  .share-btn svg {
-    width: 20px;
-    height: 20px;
-  }
+.type-option span::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--chip-wax);
+  box-shadow: 0 0 0 3px var(--chip-envelope);
 }
 
-/* ---------- Edit Area ---------- */
-.letter-edit-area {
+.type-option span:hover {
+  border-color: rgba(239, 227, 211, 0.5);
+}
+
+.type-option input:checked + span {
+  border-color: var(--cream);
+  background: rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+}
+
+.type-option input:focus-visible + span {
+  outline: 2px solid var(--paper);
+  outline-offset: 3px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 0.9rem;
+  color: #b8a79c;
+}
+
+.field input,
+.field textarea {
   width: 100%;
-  background: transparent;
-  border: none;
+  padding: 11px 12px;
+  border: 1px solid rgba(239, 227, 211, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--cream);
+  font: 400 1rem/1.5 var(--font-serif);
+  color-scheme: dark;
+}
+
+.field textarea {
   resize: vertical;
-  color: var(--ink);
-  font-family: inherit;
-  padding: 10px;
+}
+
+.field input:focus,
+.field textarea:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--cream);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.field-count {
+  justify-self: end;
+  font-size: 0.8rem;
+  color: #8f8079;
+}
+
+.form-error {
+  margin: 0;
+  color: #ff9aa9;
+}
+
+.link-btn {
+  border: 0;
+  background: none;
+  padding: 8px 2px;
+  font: inherit;
+  color: var(--cream);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.share-links {
+  display: grid;
+  gap: 14px;
+}
+
+.share-url {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.share-url input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(239, 227, 211, 0.2);
   border-radius: 8px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--cream);
+  font: 400 0.95rem var(--font-serif);
 }
 
-.letter-edit-area:focus {
-  background: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 0 0 2px rgba(163, 38, 61, 0.3);
+.share-apps {
+  display: flex;
+  gap: 10px;
 }
 
-.letter-title-edit {
-  width: 100%;
-  margin: 0 0 18px;
-  font-family: var(--font-hand);
-  font-weight: 700;
-  font-size: clamp(2.6rem, 9vw, 3.6rem);
-  line-height: 1;
-  color: var(--rose-ink);
-  background: transparent;
-  border: none;
-  outline: none;
-  padding: 4px;
-  border-radius: 8px;
+.compose-preview {
+  position: sticky;
+  top: 24px;
+  display: grid;
+  justify-items: center;
 }
 
-.letter-title-edit:focus {
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05), 0 0 0 2px rgba(163, 38, 61, 0.3);
+.preview-label {
+  justify-self: start;
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  color: #b8a79c;
+}
+
+.compose-preview .letter {
+  max-height: none;
+  overflow: visible;
+}
+
+@media (max-width: 860px) {
+  .composer-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .compose-preview {
+    position: static;
+  }
 }
