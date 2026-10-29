@@ -20,6 +20,7 @@ export function NewLetter() {
   const [error, setError] = useState('')
   const [slug, setSlug] = useState<string | null>(null)
   const [settings, setSettings] = useState<Settings | null>(null)
+  const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit')
   const actionRef = useRef<HTMLButtonElement>(null)
   const theme = themes[themeId]
 
@@ -57,7 +58,11 @@ export function NewLetter() {
       setSlug(await createLetter(themeId, clean))
     } catch (err) {
       const code = (err as { code?: string }).code
-      setError(code === '42501' ? 'Ce compte n’est pas autorisé à envoyer des lettres.' : 'La lettre n’a pas pu être enregistrée. Réessaie.')
+      setError(
+        code === '42501'
+          ? 'Ce compte n’est pas autorisé à envoyer des lettres.'
+          : 'La lettre n’a pas pu être enregistrée. Réessaie.',
+      )
     } finally {
       setSending(false)
     }
@@ -66,63 +71,134 @@ export function NewLetter() {
   const restart = () => {
     setSlug(null)
     setFields(defaultFields(themeId))
+    setMobileTab('edit')
   }
 
   return (
-    <div className="composer-grid">
-      {slug ? (
-        <section className="panel" aria-labelledby="ready-title">
-          <h2 id="ready-title">Ta lettre est prête</h2>
-          <ShareLinks url={letterUrl(slug)} />
-          <p className="panel-warning">
-            N’ouvre pas ce lien toi-même : la lettre ne reste lisible que{' '}
-            {settings ? formatDuration(settings.read_window) : 'quelques minutes'} après sa première ouverture.
-            Sans ouverture, elle expire au bout de {settings ? formatDuration(settings.unopened_ttl) : 'quelques jours'}.
-          </p>
-          <button type="button" className="btn-seal" onClick={restart}>
-            Écrire une autre lettre
-          </button>
-        </section>
-      ) : (
-        <form className="panel" onSubmit={submit}>
-          <fieldset className="type-picker">
-            <legend>Type de lettre</legend>
-            {themeIds.map((id) => (
-              <label
-                key={id}
-                className="type-option"
-                style={{ '--chip-wax': themes[id].colors['--wax'], '--chip-envelope': themes[id].colors['--envelope'] } as React.CSSProperties}
-              >
-                <input type="radio" name="type" value={id} checked={id === themeId} onChange={() => pickTheme(id)} />
-                <span>{themes[id].label}</span>
-              </label>
-            ))}
-          </fieldset>
+    <div className="composer-wrapper">
+      <div className="compose-mobile-switch" role="tablist" aria-label="Mode de composition">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileTab === 'edit'}
+          className={`mobile-switch-btn ${mobileTab === 'edit' ? 'is-active' : ''}`}
+          onClick={() => setMobileTab('edit')}
+        >
+          Rédiger la lettre
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileTab === 'preview'}
+          className={`mobile-switch-btn ${mobileTab === 'preview' ? 'is-active' : ''}`}
+          onClick={() => setMobileTab('preview')}
+        >
+          Aperçu de la lettre
+        </button>
+      </div>
 
-          {theme.fields.map((f) => (
-            <Field key={`${themeId}-${f.key}`} def={f} value={fields[f.key] ?? ''} onChange={(v) => setField(f.key, v)} />
-          ))}
+      <div className="composer-grid">
+        <div className="composer-column form-col" data-mobile-active={mobileTab === 'edit'}>
+          {slug ? (
+            <section className="panel" aria-labelledby="ready-title">
+              <div className="ready-badge">
+                <span className="ready-seal" aria-hidden="true" />
+                <h2 id="ready-title">Votre lettre est scellée</h2>
+              </div>
+              <p className="ready-sub">Le lien secret a été généré. Partagez-le avec son destinataire.</p>
 
-          {error && (
-            <p className="form-error" role="alert">
-              {error}
-            </p>
+              <ShareLinks url={letterUrl(slug)} />
+
+              <p className="panel-warning">
+                <strong>Attention :</strong> N’ouvre pas ce lien toi-même. La lettre ne restera lisible que{' '}
+                {settings ? formatDuration(settings.read_window) : 'quelques minutes'} après sa première ouverture.
+                Sans ouverture, le lien expirera au bout de{' '}
+                {settings ? formatDuration(settings.unopened_ttl) : 'quelques jours'}.
+              </p>
+              <button type="button" className="btn-seal" onClick={restart}>
+                Écrire une autre lettre
+              </button>
+            </section>
+          ) : (
+            <form className="panel" onSubmit={submit}>
+              <fieldset className="type-picker">
+                <legend>Ambiance & Thème de la lettre</legend>
+                <div className="type-options-grid">
+                  {themeIds.map((id) => (
+                    <label
+                      key={id}
+                      className="type-option"
+                      style={
+                        {
+                          '--chip-wax': themes[id].colors['--wax'],
+                          '--chip-envelope': themes[id].colors['--envelope'],
+                        } as React.CSSProperties
+                      }
+                    >
+                      <input
+                        type="radio"
+                        name="type"
+                        value={id}
+                        checked={id === themeId}
+                        onChange={() => pickTheme(id)}
+                      />
+                      <div className="type-option-content">
+                        <div className="type-option-header">
+                          <span className="type-option-chip" aria-hidden="true" />
+                          <span className="type-option-name">{themes[id].label}</span>
+                        </div>
+                        <span className="type-option-sub">{themes[id].subtitle}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+
+              {theme.fields.map((f) => (
+                <Field
+                  key={`${themeId}-${f.key}`}
+                  def={f}
+                  value={fields[f.key] ?? ''}
+                  onChange={(v) => setField(f.key, v)}
+                />
+              ))}
+
+              {error && (
+                <p className="form-error" role="alert">
+                  {error}
+                </p>
+              )}
+              <div className="form-actions">
+                <button type="submit" className="btn-seal" disabled={sending}>
+                  {sending ? 'Enregistrement…' : 'Sceller & Générer le lien'}
+                </button>
+              </div>
+            </form>
           )}
-          <button type="submit" className="btn-seal" disabled={sending}>
-            {sending ? 'Enregistrement…' : 'Générer le lien'}
-          </button>
-        </form>
-      )}
+        </div>
 
-      <section className="compose-preview" aria-label="Aperçu de la lettre">
-        <p className="preview-label">Aperçu</p>
-        <article className="letter" data-visible="true" data-ink="true">
-          <LetterContent theme={theme} fields={fields} />
-          <div className="letter-footer">
-            <ActionButton theme={theme} buttonRef={actionRef} onClick={() => actionRef.current && burst[theme.particles](actionRef.current)} />
+        <section
+          className="compose-preview composer-column preview-col"
+          data-mobile-active={mobileTab === 'preview'}
+          aria-label="Aperçu de la lettre"
+        >
+          <div className="preview-header">
+            <span className="preview-label">Aperçu en temps réel ({theme.label})</span>
+            <span className="preview-hint">Telle que le destinataire la découvrira</span>
           </div>
-        </article>
-      </section>
+
+          <article className="letter" data-visible="true" data-ink="true">
+            <LetterContent theme={theme} fields={fields} />
+            <div className="letter-footer">
+              <ActionButton
+                theme={theme}
+                buttonRef={actionRef}
+                onClick={() => actionRef.current && burst[theme.particles](actionRef.current)}
+              />
+            </div>
+          </article>
+        </section>
+      </div>
     </div>
   )
 }

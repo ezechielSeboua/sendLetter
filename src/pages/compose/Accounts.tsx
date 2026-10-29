@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { ConfirmModal } from '../../components/ConfirmModal'
 import { addAllowedEmail, listAllowedEmails, removeAllowedEmail, type AllowedEmail } from '../../lib/letters'
 
 const date = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' })
@@ -10,7 +11,8 @@ const errorMessages: Record<string, string> = {
   cannot_demote_self: 'Tu ne peux pas retirer ton propre rôle d’administrateur.',
   not_admin: 'Ce compte n’est pas administrateur.',
 }
-const messageOf = (err: unknown, fallback: string) => errorMessages[(err as { message?: string }).message ?? ''] ?? fallback
+const messageOf = (err: unknown, fallback: string) =>
+  errorMessages[(err as { message?: string }).message ?? ''] ?? fallback
 
 // Onglet « Comptes » (administrateurs) : qui peut se connecter et envoyer des lettres.
 export function Accounts({ me }: { me: string }) {
@@ -19,6 +21,7 @@ export function Accounts({ me }: { me: string }) {
   const [admin, setAdmin] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [targetRemove, setTargetRemove] = useState<AllowedEmail | null>(null)
 
   const load = useCallback(() => {
     listAllowedEmails()
@@ -51,8 +54,10 @@ export function Accounts({ me }: { me: string }) {
     }
   }
 
-  const remove = (a: AllowedEmail) => {
-    if (!window.confirm(`Retirer ${a.email} ? Ce compte ne pourra plus envoyer de lettres.`)) return
+  const confirmRemove = () => {
+    if (!targetRemove) return
+    const a = targetRemove
+    setTargetRemove(null)
     run(() => removeAllowedEmail(a.email), 'Le compte n’a pas pu être retiré.')
   }
 
@@ -92,7 +97,12 @@ export function Accounts({ me }: { me: string }) {
         </p>
       )}
 
-      {accounts === null && !error && <p className="muted">Chargement…</p>}
+      {accounts === null && !error && (
+        <div className="panel-loading">
+          <div className="loader-seal" aria-hidden="true" />
+          <p className="muted">Chargement des comptes…</p>
+        </div>
+      )}
 
       {accounts && (
         <ul className="account-list">
@@ -116,11 +126,18 @@ export function Accounts({ me }: { me: string }) {
                     type="button"
                     className="link-btn"
                     disabled={busy}
-                    onClick={() => run(() => addAllowedEmail(a.email, !a.is_admin), 'Le rôle n’a pas pu être modifié.')}
+                    onClick={() =>
+                      run(() => addAllowedEmail(a.email, !a.is_admin), 'Le rôle n’a pas pu être modifié.')
+                    }
                   >
                     {a.is_admin ? 'Retirer admin' : 'Rendre admin'}
                   </button>
-                  <button type="button" className="link-btn link-danger" disabled={busy} onClick={() => remove(a)}>
+                  <button
+                    type="button"
+                    className="link-btn link-danger"
+                    disabled={busy}
+                    onClick={() => setTargetRemove(a)}
+                  >
                     Retirer
                   </button>
                 </div>
@@ -129,6 +146,16 @@ export function Accounts({ me }: { me: string }) {
           ))}
         </ul>
       )}
+
+      <ConfirmModal
+        open={targetRemove !== null}
+        title="Retirer ce compte ?"
+        message={`Retirer ${targetRemove?.email} ? Ce compte ne pourra plus se connecter ni envoyer de lettres.`}
+        confirmLabel="Retirer le compte"
+        danger
+        onConfirm={confirmRemove}
+        onCancel={() => setTargetRemove(null)}
+      />
     </section>
   )
 }

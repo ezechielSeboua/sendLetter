@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { ConfirmModal } from '../../components/ConfirmModal'
 import { deleteMyLetter, letterUrl, listMyLetters, type LetterStatus, type LetterSummary } from '../../lib/letters'
 import { themes } from '../../lib/themes'
 
@@ -24,6 +25,7 @@ export function History() {
   const [letters, setLetters] = useState<LetterSummary[] | null>(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
+  const [target, setTarget] = useState<LetterSummary | null>(null)
 
   const load = useCallback(() => {
     listMyLetters()
@@ -46,12 +48,10 @@ export function History() {
     }
   }
 
-  const remove = async (l: LetterSummary) => {
-    const question =
-      l.status === 'sent'
-        ? 'Annuler cette lettre ? Le lien ne fonctionnera plus.'
-        : 'Retirer cette lettre de l’historique ?'
-    if (!window.confirm(question)) return
+  const confirmDelete = async () => {
+    if (!target) return
+    const l = target
+    setTarget(null)
     try {
       await deleteMyLetter(l.slug)
       setLetters((list) => list?.filter((x) => x.slug !== l.slug) ?? null)
@@ -80,7 +80,12 @@ export function History() {
         </p>
       )}
 
-      {letters === null && !error && <p className="muted">Chargement…</p>}
+      {letters === null && !error && (
+        <div className="panel-loading">
+          <div className="loader-seal" aria-hidden="true" />
+          <p className="muted">Chargement de l’historique…</p>
+        </div>
+      )}
 
       {letters?.length === 0 && <p className="muted">Aucune lettre pour le moment.</p>}
 
@@ -97,7 +102,12 @@ export function History() {
                 <li key={l.slug} className="history-item">
                   <span
                     className="history-type"
-                    style={{ '--chip-wax': theme.colors['--wax'], '--chip-envelope': theme.colors['--envelope'] } as React.CSSProperties}
+                    style={
+                      {
+                        '--chip-wax': theme.colors['--wax'],
+                        '--chip-envelope': theme.colors['--envelope'],
+                      } as React.CSSProperties
+                    }
                   >
                     {theme.label}
                   </span>
@@ -117,7 +127,7 @@ export function History() {
                         {copied === l.slug ? 'Copié !' : 'Copier le lien'}
                       </button>
                     )}
-                    <button type="button" className="link-btn link-danger" onClick={() => remove(l)}>
+                    <button type="button" className="link-btn link-danger" onClick={() => setTarget(l)}>
                       {l.status === 'sent' ? 'Annuler' : 'Retirer'}
                     </button>
                   </div>
@@ -127,6 +137,20 @@ export function History() {
           </ul>
         </>
       )}
+
+      <ConfirmModal
+        open={target !== null}
+        title={target?.status === 'sent' ? 'Annuler cette lettre ?' : 'Retirer de l’historique ?'}
+        message={
+          target?.status === 'sent'
+            ? 'Le lien ne sera plus accessible par son destinataire et la lettre sera annulée.'
+            : 'Cette lettre sera retirée de votre historique.'
+        }
+        confirmLabel={target?.status === 'sent' ? 'Annuler la lettre' : 'Retirer'}
+        danger
+        onConfirm={confirmDelete}
+        onCancel={() => setTarget(null)}
+      />
     </section>
   )
 }

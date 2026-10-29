@@ -201,7 +201,7 @@ export class EnvelopeScene {
 
     // Dos de l'enveloppe : la face avant de la boîte est l'intérieur, doublé de rose sombre.
     const side = paper(t.envelopeShade)
-    const inside = paper('#4a1d27', { roughness: 0.7 })
+    const inside = paper(t.lining, { roughness: 0.7 })
     const backGeo = new THREE.BoxGeometry(W, H, 0.025)
     backGeo.translate(0, 0, -0.0125)
     const back = new THREE.Mesh(backGeo, [side, side, side, side, inside, side])
@@ -239,7 +239,7 @@ export class EnvelopeScene {
     left.position.z = 0.01
     const right = new THREE.Mesh(triangle([[W / 2, H / 2], [0.02 * -1, -0.04], [W / 2, -H / 2]]), paper(t.envelope))
     right.position.z = 0.012
-    const bottom = new THREE.Mesh(triangle([[-W / 2, -H / 2], [W / 2, -H / 2], [0, 0.12]]), paper('#242021'))
+    const bottom = new THREE.Mesh(triangle([[-W / 2, -H / 2], [W / 2, -H / 2], [0, 0.12]]), paper(t.envelopeShade))
     bottom.position.z = 0.016
     for (const m of [left, right, bottom]) {
       m.castShadow = true
@@ -248,7 +248,7 @@ export class EnvelopeScene {
 
     // Rabat supérieur : extérieur anthracite, doublure rose visible une fois ouvert.
     const flapGeo = topFlapGeometry()
-    const flapOut = new THREE.Mesh(flapGeo, paper('#302a2b'))
+    const flapOut = new THREE.Mesh(flapGeo, paper(t.envelope))
     flapOut.castShadow = true
     flapOut.receiveShadow = true
     const flapIn = new THREE.Mesh(flapGeo, paper(t.lining, { side: THREE.BackSide, roughness: 0.65 }))

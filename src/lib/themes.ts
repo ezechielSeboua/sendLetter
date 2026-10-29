@@ -19,6 +19,7 @@ const message: FieldDef = { key: 'message', label: 'Message', kind: 'textarea', 
 
 export interface Theme {
   label: string
+  subtitle: string
   // Variables CSS de :root (lues aussi par la scène 3D via readTokens)
   colors: Record<string, string>
   defaultTitle: string
@@ -39,6 +40,7 @@ export interface Theme {
 export const themes: Record<ThemeId, Theme> = {
   invitation: {
     label: 'Invitation',
+    subtitle: 'Confidentiel & Royal',
     colors: {
       '--night': '#050505',
       '--night-glow': '#1a1a1a',
@@ -58,7 +60,7 @@ export const themes: Record<ThemeId, Theme> = {
     headingSub: 'Pour sa majesté',
     sealButton: 'Touchez le sceau royal',
     sealHint: 'Pour ouvrir la lettre.',
-    actionLabel: 'Votre humble serviteur 📜',
+    actionLabel: 'Votre humble serviteur',
     actionHeart: false,
     actionAnnounce: 'Vœu exaucé.',
     particles: 'embers',
@@ -73,18 +75,19 @@ export const themes: Record<ThemeId, Theme> = {
   },
   birthday: {
     label: 'Anniversaire',
+    subtitle: 'Fête & Surprise',
     colors: {
       '--night': '#0B132B',
       '--night-glow': '#1C2541',
-      '--envelope': '#F9A03F',
-      '--envelope-shade': '#D77A1A',
-      '--lining': '#EAEAEA',
-      '--wax': '#E71D36',
-      '--paper': '#FDFFFC',
-      '--ink': '#011627',
-      '--ink-soft': '#5b6f82',
-      '--rose-ink': '#2EC4B6',
-      '--cream': '#FDFFFC',
+      '--envelope': '#E29547',
+      '--envelope-shade': '#C4782A',
+      '--lining': '#FFF3E3',
+      '--wax': '#D92038',
+      '--paper': '#FAF8F5',
+      '--ink': '#0F1E36',
+      '--ink-soft': '#4F637A',
+      '--rose-ink': '#26A69A',
+      '--cream': '#FAF8F5',
     },
     defaultTitle: 'Joyeux Anniversaire !',
     defaultMessage: "Je te souhaite une journée remplie de joie, de rires et de belles surprises. Que cette nouvelle année t'apporte tout ce que tu désires. Profite bien de cette journée qui est la tienne !",
@@ -92,7 +95,7 @@ export const themes: Record<ThemeId, Theme> = {
     headingSub: 'prête à être découverte',
     sealButton: 'Briser le sceau',
     sealHint: 'ou touche l’enveloppe',
-    actionLabel: 'Happy Birthday ! 🎉',
+    actionLabel: 'Joyeux Anniversaire !',
     actionHeart: false,
     actionAnnounce: 'Confettis lancés !',
     particles: 'confetti',
@@ -106,6 +109,7 @@ export const themes: Record<ThemeId, Theme> = {
   },
   crush: {
     label: 'Crush',
+    subtitle: 'Intime & Romantique',
     colors: {
       '--night': '#140b0d',
       '--night-glow': '#2c171b',

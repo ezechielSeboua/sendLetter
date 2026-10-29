@@ -9,7 +9,15 @@ import { Letter } from './Letter'
 type Phase = 'loading' | 'closed' | 'striking' | 'opening' | 'open' | 'closing'
 
 // Enveloppe, marteau, sceau puis lettre. La palette du thème doit être appliquée avant le montage.
-export function LetterExperience({ theme, fields }: { theme: Theme; fields: LetterFields }) {
+export function LetterExperience({
+  theme,
+  fields,
+  expiresAt,
+}: {
+  theme: Theme
+  fields: LetterFields
+  expiresAt?: string
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sceneRef = useRef<EnvelopeScene | null>(null)
   const openBtnRef = useRef<HTMLButtonElement>(null)
@@ -73,6 +81,13 @@ export function LetterExperience({ theme, fields }: { theme: Theme; fields: Lett
       setPhase('striking')
       setHoverEnvelope(false)
       await hammerRef.current?.strike(sealPosition(), from)
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate([40, 60, 40])
+        } catch {
+          /* vibration ignorée */
+        }
+      }
       sceneRef.current?.impact()
       openLetter()
     },
@@ -182,7 +197,16 @@ export function LetterExperience({ theme, fields }: { theme: Theme; fields: Lett
         </div>
       </main>
 
-      <Letter theme={theme} fields={fields} visible={letterVisible} ink={ink} dim={!webgl} onClose={closeLetter} announce={announce} />
+      <Letter
+        theme={theme}
+        fields={fields}
+        visible={letterVisible}
+        ink={ink}
+        dim={!webgl}
+        expiresAt={expiresAt}
+        onClose={closeLetter}
+        announce={announce}
+      />
 
       <Hammer ref={hammerRef} active={phase === 'closed' || phase === 'striking'} ready={hoverEnvelope} />
 

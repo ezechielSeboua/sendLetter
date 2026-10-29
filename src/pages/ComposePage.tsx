@@ -101,7 +101,7 @@ const tabFromHash = (): Tab =>
   window.location.hash === tabHash.history ? 'history' : window.location.hash === tabHash.settings ? 'settings' : 'new'
 
 // Onglets dans l'adresse (#historique, #reglages) : un rechargement garde l'onglet ouvert.
-function Dashboard({ email, isAdmin }: { email: string; isAdmin: boolean }) {
+export function Dashboard({ email, isAdmin }: { email: string; isAdmin: boolean }) {
   const [tab, setTab] = useState<Tab>(tabFromHash)
 
   useEffect(() => {

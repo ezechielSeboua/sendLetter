@@ -5,7 +5,7 @@ import { applyTheme, themes, type Theme } from '../lib/themes'
 
 type State =
   | { kind: 'loading' }
-  | { kind: 'ready'; theme: Theme; fields: LetterFields }
+  | { kind: 'ready'; theme: Theme; fields: LetterFields; expiresAt: string }
   | { kind: 'gone' }
   | { kind: 'error' }
 
@@ -21,7 +21,7 @@ export function ReadPage({ slug }: { slug: string }) {
         const theme = themes[res.theme]
         // Palette posée avant le montage de la scène 3D, qui la lit à son initialisation
         applyTheme(theme)
-        setState({ kind: 'ready', theme, fields: res.fields })
+        setState({ kind: 'ready', theme, fields: res.fields, expiresAt: res.expires_at })
       })
       .catch(() => !cancelled && setState({ kind: 'error' }))
     return () => {
@@ -29,7 +29,9 @@ export function ReadPage({ slug }: { slug: string }) {
     }
   }, [slug])
 
-  if (state.kind === 'ready') return <LetterExperience theme={state.theme} fields={state.fields} />
+  if (state.kind === 'ready') {
+    return <LetterExperience theme={state.theme} fields={state.fields} expiresAt={state.expiresAt} />
+  }
 
   if (state.kind === 'loading') {
     return (

@@ -100,10 +100,6 @@ export function drawCard(card: HTMLElement, tokens: Tokens, target?: HTMLCanvasE
   ctx.fillRect(-1, -1, 3, 3)
   ctx.restore()
 
-  // Lignes du papier : repeating-linear-gradient, 1px tous les 32px
-  ctx.fillStyle = 'rgba(163, 38, 61, 0.08)'
-  for (let y = 31; y < bh; y += 32) ctx.fillRect(0, y, bw, 1)
-
   // Textes visibles avant l'écriture : titre et boutons du pied de page
   const drawText = (el: Element | null, underline = false) => {
     if (!el) return
